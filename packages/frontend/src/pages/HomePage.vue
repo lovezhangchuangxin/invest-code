@@ -92,8 +92,9 @@
           </div>
           <div class="tip-content" v-show="tipExpand">
             <p>
-              你需要定义一个 run 方法，无需 export 导出。run
-              方法需要返回一个数字，表示当前 tick 你投资的金额
+              你需要定义一个 run 函数，无需 export 导出。run
+              方法需要返回一个数字，表示当前 tick
+              你投资的金额（一次最多投资1e9，超出该值会自动设置为1e9）
             </p>
             <p>下面是本游戏提供的一些 api 方法：</p>
             <p>

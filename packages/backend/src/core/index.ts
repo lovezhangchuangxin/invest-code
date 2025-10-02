@@ -2,6 +2,13 @@ import { getUserSockets } from '@/app/server'
 import { gameData, Investment, saveGameData } from '@/db'
 import { Context, Isolate } from 'isolated-vm'
 
+const PLAYER_HISTORY_SIZE = parseInt(process.env.PLAYER_HISTORY_SIZE || '100')
+const GAME_GLOBAL_HISTORY_SIZE = parseInt(
+  process.env.GAME_GLOBAL_HISTORY_SIZE || '1000',
+)
+const GAME_MAX_INVEST = Number(process.env.GAME_MAX_INVEST || '1e9')
+const GAME_TICK = parseInt(process.env.GAME_TICK || '1000')
+
 export class Player {
   public id: number
   public code: string
@@ -101,7 +108,7 @@ export class Player {
       })
       let invest = Math.floor(Number(result))
       if (isNaN(invest) || invest < 0) invest = 0
-      invest = Math.min(invest, this.gold)
+      invest = Math.min(invest, this.gold, GAME_MAX_INVEST)
       this.gold -= invest
       const rate = Player.calculateReturnRate()
       const profit = Math.floor(invest * rate)
@@ -246,7 +253,7 @@ export class Game {
             `User ${player.id} invested ${investRecord.amount} and got profit ${investRecord.profit}`,
           )
           user.history.push(investRecord)
-          user.history = user.history.slice(-100)
+          user.history = user.history.slice(-PLAYER_HISTORY_SIZE)
           user.gold = player.gold
         }
         getUserSockets(user.id).forEach((socket) => {
@@ -270,7 +277,7 @@ export class Game {
           })
         })
       }
-      this.history = this.history.slice(-100)
+      this.history = this.history.slice(-GAME_GLOBAL_HISTORY_SIZE)
       gameData.history = this.history
     } catch (error) {
       this.error = (error as Error).stack || (error as Error).message
@@ -311,7 +318,7 @@ export class Game {
   public start() {
     this.timer = setTimeout(() => {
       this.runTick().finally(() => this.start())
-    }, +(process.env.GAME_TICK || 1000))
+    }, GAME_TICK)
   }
 
   public dispose() {
