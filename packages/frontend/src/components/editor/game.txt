@@ -1,4 +1,9 @@
 /**
+ * 获取当前 tick 
+ */
+declare function getTick(): number
+
+/**
  * 获取玩家当前金币数量
  */
 declare function getGold(): number

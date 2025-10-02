@@ -14,6 +14,8 @@ export class Player {
   public codeError: string | null = null
   // run 方法执行报错
   public runError: string | null = null
+  // 用户输出
+  public output: string = ''
 
   constructor(
     id: number,
@@ -35,6 +37,8 @@ export class Player {
   public setupSandbox() {
     const jail = this.context.global
     jail.setSync('global', jail.derefInto())
+    // 设置获取当前 tick 的函数
+    jail.setSync('getTick', () => gameData.tick)
     // 设置获取金币的函数
     jail.setSync('getGold', () => this.gold)
     // 设置获取自己历史记录的函数
@@ -43,6 +47,35 @@ export class Player {
     jail.setSync('getAllHistory', this.getAllHistoryRef)
     // 设置游戏函数
     jail.setSync('run', 'undefined')
+
+    // 直接在沙箱中创建console对象，将输出存储在全局变量中
+    this.context.evalSync(`
+      const __output = [];
+      const console = {
+        log(...args) {
+          __output.push(args.map(arg => {
+            if (typeof arg === 'object') {
+              try {
+                return JSON.stringify(arg);
+              } catch (e) {
+                return String(arg);
+              }
+            }
+            return String(arg);
+          }).join(' '));
+        },
+        getOutput() {
+          return __output.join('\\n');
+        },
+        clearOutput() {
+          __output.length = 0;
+        }
+      };
+      // 将console对象和输出数组设置到全局作用域
+      global.console = console;
+      global.__output = __output;
+    `)
+
     // 执行代码
     try {
       this.context.evalSync(this.code)
@@ -54,7 +87,13 @@ export class Player {
   // 执行玩家run函数进行投资，run 的返回值为投资金额
   public async executeRun(tick: number) {
     this.runError = null
+    // 清空之前的输出
+    this.output = ''
+
     try {
+      // 清空console输出缓存
+      await this.context.evalSync('console.clearOutput();')
+
       const run = await this.context.global.get('run', { reference: true })
       const result = await run.apply(undefined, [], {
         timeout: 20,
@@ -75,9 +114,32 @@ export class Player {
         tick,
       }
       this.myHistory.push(investRecord)
+
+      // 获取用户输出
+      try {
+        const outputResult = await this.context.evalSync('console.getOutput();')
+        if (typeof outputResult === 'string') {
+          // 截取前 10000 个字符
+          this.output = outputResult.slice(0, 10000)
+        }
+      } catch (consoleError) {
+        // 忽略获取输出时的错误
+      }
+
       return investRecord
     } catch (e) {
       this.runError = (e as Error).stack || (e as Error).message
+
+      // 即使出错也尝试获取输出
+      try {
+        const outputResult = await this.context.evalSync('console.getOutput();')
+        if (typeof outputResult === 'string') {
+          this.output = outputResult
+        }
+      } catch (consoleError) {
+        // 忽略获取输出时的错误
+      }
+
       return
     }
   }
@@ -156,6 +218,13 @@ export class Game {
           user.gold = player.gold
         }
         getUserSockets(user.id).forEach((socket) => {
+          if (player.output) {
+            socket.emit('output', {
+              tick: this.tick + 1,
+              output: player.output,
+            })
+          }
+
           if (player.runError) {
             socket.emit('runError', {
               tick: this.tick + 1,

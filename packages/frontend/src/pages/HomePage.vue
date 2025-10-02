@@ -37,6 +37,9 @@
                 <h3>运行结果</h3>
               </div>
               <div class="result-controls">
+                <button class="clear-log-btn" @click.stop="clearLog">
+                  清空日志
+                </button>
                 <button
                   class="scroll-toggle-btn"
                   @click.stop="toggleAutoScroll"
@@ -66,9 +69,8 @@
                     v-for="(msg, index) in messages"
                     :key="index"
                     class="log-message"
-                  >
-                    {{ msg }}
-                  </div>
+                    v-html="formatMessage(msg)"
+                  ></div>
                 </div>
               </div>
             </div>
@@ -87,6 +89,10 @@
               方法需要返回一个数字，表示当前 tick 你投资的金额
             </p>
             <p>下面是本游戏提供的一些 api 方法：</p>
+            <p>
+              <code>getTick()</code>
+              获取当前 tick
+            </p>
             <p>
               <code>getGold()</code>
               获取你拥有的金币数量
@@ -165,14 +171,15 @@ const toggleAutoScroll = () => {
   autoScroll.value = !autoScroll.value
 }
 
-const saveCode = async () => {
-  const res = await UserApi.uploadScript(code.value)
-  if (res.code === 0) {
-    userStore.code = code.value
-    ElMessage.success('保存成功')
-  } else {
-    ElMessage.error(res.msg)
-  }
+// 格式化消息，处理换行符
+const formatMessage = (msg: string) => {
+  // 将换行符转换为HTML的<br>标签
+  return msg.replace(/\n/g, '<br>')
+}
+
+// 清空日志
+const clearLog = () => {
+  messages.value = []
 }
 
 // 自动滚动到底部
@@ -207,7 +214,7 @@ watchEffect(() => {
       messages.value.push(
         `[${tick}]: 投资${investment.amount}，收益${
           investment.profit
-        }，收益率${((investment.profit / investment.amount) * 100).toFixed(
+        }，收益率${((investment.profit / investment.amount) * 100 || 0).toFixed(
           2,
         )}%`,
       )
@@ -219,7 +226,7 @@ watchEffect(() => {
   socket.value.on(
     'codeError',
     ({ tick, error }: { tick: number; error: string }) => {
-      messages.value.push(`[${tick}]: ${error}`)
+      messages.value.push(`[tick: ${tick}]: ${error}`)
       messages.value = messages.value.slice(-100)
     },
   )
@@ -227,32 +234,17 @@ watchEffect(() => {
   socket.value.on(
     'runError',
     ({ tick, error }: { tick: number; error: string }) => {
-      messages.value.push(`[${tick}]: ${error}`)
+      messages.value.push(`[tick: ${tick}]: ${error}`)
       messages.value = messages.value.slice(-100)
     },
   )
 
   socket.value.on(
     'output',
-    ({
-      tick,
-      output,
-      total,
-    }: {
-      tick: number
-      output: string[]
-      total: number
-    }) => {
-      if (total >= 10000) {
-        messages.value.push(
-          `[${tick} console]: 输出长度大于10000个字符，不显示，请减少输出`,
-        )
-        return
-      }
-
-      output.forEach((msg) => {
-        messages.value.push(`[${tick} console]: ${msg}`)
-      })
+    ({ tick, output }: { tick: number; output: string }) => {
+      messages.value.push(
+        `[tick: ${tick} console start]:\n${output}\n[console end]`,
+      )
     },
   )
 })
@@ -279,6 +271,16 @@ const leaderboardInterval = setInterval(fetchLeaderboard, 2000)
 onBeforeUnmount(() => {
   clearInterval(leaderboardInterval)
 })
+
+const saveCode = async () => {
+  const res = await UserApi.uploadScript(code.value)
+  if (res.code === 0) {
+    userStore.code = code.value
+    ElMessage.success('保存成功')
+  } else {
+    ElMessage.error(res.msg)
+  }
+}
 </script>
 
 <style scoped>
@@ -399,6 +401,7 @@ onBeforeUnmount(() => {
   margin: 4px 0;
   padding: 2px 0;
   color: #495057;
+  white-space: pre-wrap;
 }
 
 .log-message:first-child {
@@ -433,7 +436,24 @@ onBeforeUnmount(() => {
   gap: 12px;
 }
 
+.clear-log-btn {
+  margin-right: 10px;
+  padding: 4px 8px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.3s;
+}
+
+.clear-log-btn:hover {
+  background-color: #c82333;
+}
+
 .scroll-toggle-btn {
+  margin-right: 10px;
   padding: 4px 12px;
   background-color: #42b983;
   color: white;
