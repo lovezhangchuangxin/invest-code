@@ -3,11 +3,19 @@ import { gameData, Investment, saveGameData } from '@/db'
 import { Context, Isolate } from 'isolated-vm'
 
 const PLAYER_HISTORY_SIZE = parseInt(process.env.PLAYER_HISTORY_SIZE || '100')
+const CODE_TIME_LIMIT = parseInt(process.env.CODE_TIME_LIMIT || '20')
+const CODE_MEMORY_LIMIT = parseInt(process.env.CODE_MEMORY_LIMIT || '32')
 const GAME_GLOBAL_HISTORY_SIZE = parseInt(
   process.env.GAME_GLOBAL_HISTORY_SIZE || '1000',
 )
 const GAME_MAX_INVEST = Number(process.env.GAME_MAX_INVEST || '1e8')
 const GAME_TICK = parseInt(process.env.GAME_TICK || '1000')
+const GOLD_AUTO_INCREASE_MAX = Number(
+  process.env.GOLD_AUTO_INCREASE_MAX || '1000',
+)
+const GOLD_AUTO_INCREASE_NUM = Number(
+  process.env.GOLD_AUTO_INCREASE_NUM || '10',
+)
 
 export class Player {
   public id: number
@@ -35,7 +43,7 @@ export class Player {
     this.code = code
     this.gold = initialGold
     this.getAllHistoryRef = getAllHistoryRef
-    this.isolate = new Isolate({ memoryLimit: 32 })
+    this.isolate = new Isolate({ memoryLimit: CODE_MEMORY_LIMIT })
     this.context = this.isolate.createContextSync()
     this.setupSandbox()
   }
@@ -105,7 +113,7 @@ export class Player {
 
       const run = await this.context.global.get('run', { reference: true })
       const result = await run.apply(undefined, [], {
-        timeout: 20,
+        timeout: CODE_TIME_LIMIT,
         result: { promise: true },
       })
       let invest = Math.floor(Number(result))
@@ -216,7 +224,9 @@ export class Game {
         }
 
         // 自然增长
-        player.gold += 10
+        if (player.gold < GOLD_AUTO_INCREASE_MAX) {
+          player.gold += GOLD_AUTO_INCREASE_NUM
+        }
         if (!player.code.trim()) {
           continue
         }
