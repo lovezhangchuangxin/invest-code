@@ -26,7 +26,10 @@ export default class UserService {
   ) {
     // 先检查验证码
     const cacheVerification = UserService.verificationCache.get(email)
-    if (cacheVerification !== verification) {
+    const enableVerification =
+      !!process.env.MAIL_PASSWORD &&
+      process.env.MAIL_PASSWORD.split('').some((c) => c !== 'x')
+    if (enableVerification && cacheVerification !== verification) {
       throw new GameError(ErrorCode.VERIFICATION_ERROR)
     }
 

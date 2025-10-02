@@ -302,7 +302,7 @@ const players = users.map((user) => {
     user.id,
     user.code,
     user.gold,
-    user.history,
+    [...user.history],
     () => gameData.history,
   )
 })
