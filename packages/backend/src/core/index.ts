@@ -144,27 +144,60 @@ export class Player {
   }
 
   /**
-   * 计算一个随机的收益率，范围 0 ~ 6，期望值约为 1.2
+   * 计算一个随机的收益率（乘数），引入“市场情景”混合分布：
+   * - 熊市（约30%）：回报偏向亏损，波动相对较小
+   * - 常态（约50%）：回报围绕1倍附近小幅波动
+   * - 牛市（约20%）：回报偏向盈利，尾部受控
+   *
+   * 使用截断对数正态分布来保证非负且控制长尾；最终裁剪到合理区间 [0.4, 3.0]
+   * 期望值约略在 1.05~1.15 之间（随采样随机浮动），更贴近投资常识。
    */
   public static calculateReturnRate() {
-    // 使用正态分布近似，均值为1.2，标准差为0.8
-    // 这样可以确保大部分结果在0-6范围内，且期望值为1.2
-    const mean = 1.01
-    const stdDev = 0.8
+    // 情景权重（可调整）
+    const pBear = 0.3
+    const pNormal = 0.5
+    const pBull = 0.2
 
-    // Box-Muller变换生成正态分布随机数
-    const u1 = Math.random()
-    const u2 = Math.random()
-    const randomNormal =
-      Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
+    // 截断区间，避免极端值
+    const minRate = 0.4
+    const maxRate = 3.0
 
-    // 转换为指定均值和标准差的正态分布
-    let result = mean + stdDev * randomNormal
+    // 采样情景
+    const r = Math.random()
+    let mu: number
+    let sigma: number
+    if (r < pBear) {
+      // 熊市：中位数约 0.85，波动较小
+      mu = Math.log(0.85)
+      sigma = 0.18
+    } else if (r < pBear + pNormal) {
+      // 常态：中位数约 1.02，轻微波动
+      mu = Math.log(1.02)
+      sigma = 0.12
+    } else {
+      // 牛市：中位数约 1.30，波动略大但受控
+      mu = Math.log(1.3)
+      sigma = 0.22
+    }
 
-    // 确保结果在0-6范围内
-    result = Math.max(0, Math.min(6, result))
+    // 采样截断对数正态
+    const sampleTruncatedLogNormal = (
+      muVal: number,
+      sigmaVal: number,
+      minVal: number,
+      maxVal: number,
+    ) => {
+      // Box-Muller 生成标准正态
+      const u1 = Math.random() || Number.MIN_VALUE
+      const u2 = Math.random()
+      const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
+      const logNorm = Math.exp(muVal + sigmaVal * z)
+      // 裁剪以控制尾部
+      return Math.min(maxVal, Math.max(minVal, logNorm))
+    }
 
-    return result
+    const rate = sampleTruncatedLogNormal(mu, sigma, minRate, maxRate)
+    return rate
   }
 }
 
