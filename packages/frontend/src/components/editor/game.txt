@@ -1,0 +1,28 @@
+/**
+ * 获取玩家当前金币数量
+ */
+declare function getGold(): number
+
+/**
+ * 投资记录
+ */
+interface Investment {
+  /** 用户ID */
+  userId: number
+  /** 投资金额 */
+  amount: number
+  /** 收益 */
+  profit: number
+  /** 游戏时间 */
+  tick: number
+}
+
+/**
+ * 获取自己的投资记录
+ */
+declare function getMyHistory(): Array<Investment>
+
+/**
+ * 获取全服投资记录
+ */
+declare function getAllHistory(): Array<Investment>
