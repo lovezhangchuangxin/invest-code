@@ -113,10 +113,6 @@
               <code>{amount, profit}</code>字段，amount 表示你投入的金额，profit
               表示你的利润
             </p>
-            <p>
-              <code>getAllHistory()</code>
-              获取全服的历史投资记录数组
-            </p>
           </div>
         </div>
         <div class="editor-container">
