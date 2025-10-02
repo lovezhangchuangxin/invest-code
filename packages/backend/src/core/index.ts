@@ -150,7 +150,7 @@ export class Player {
   public static calculateReturnRate() {
     // 使用正态分布近似，均值为1.2，标准差为0.8
     // 这样可以确保大部分结果在0-6范围内，且期望值为1.2
-    const mean = 1.2
+    const mean = 1.01
     const stdDev = 0.8
 
     // Box-Muller变换生成正态分布随机数
