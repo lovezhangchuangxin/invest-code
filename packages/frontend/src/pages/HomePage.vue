@@ -214,9 +214,10 @@ watchEffect(() => {
       messages.value.push(
         `[${tick}]: 投资${investment.amount}，收益${
           investment.profit
-        }，收益率${((investment.profit / investment.amount) * 100 || 0).toFixed(
-          2,
-        )}%`,
+        }，收益率${(
+          ((investment.profit - investment.amount) / investment.amount) * 100 ||
+          0
+        ).toFixed(2)}%`,
       )
       messages.value = messages.value.slice(-100)
       userStore.gold = gold
