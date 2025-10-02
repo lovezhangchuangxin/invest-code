@@ -6,7 +6,6 @@ export class Player {
   public id: number
   public code: string
   public gold: number
-  public myHistory: Investment[]
   public getAllHistoryRef: () => Investment[]
   public isolate: Isolate
   public context: Context
@@ -21,13 +20,11 @@ export class Player {
     id: number,
     code: string,
     initialGold: number,
-    initialHistory: Investment[],
     getAllHistoryRef: () => Investment[],
   ) {
     this.id = id
     this.code = code
     this.gold = initialGold
-    this.myHistory = initialHistory
     this.getAllHistoryRef = getAllHistoryRef
     this.isolate = new Isolate({ memoryLimit: 32 })
     this.context = this.isolate.createContextSync()
@@ -42,7 +39,10 @@ export class Player {
     // 设置获取金币的函数
     jail.setSync('getGold', () => this.gold)
     // 设置获取自己历史记录的函数
-    jail.setSync('getMyHistory', () => this.myHistory)
+    jail.setSync('getMyHistory', () => {
+      const user = gameData.users[this.id]
+      return user.history
+    })
     // 设置获取全局历史记录的函数
     jail.setSync('getAllHistory', this.getAllHistoryRef)
     // 设置游戏函数
@@ -113,14 +113,13 @@ export class Player {
         profit,
         tick,
       }
-      this.myHistory.push(investRecord)
 
       // 获取用户输出
       try {
         const outputResult = await this.context.evalSync('console.getOutput();')
         if (typeof outputResult === 'string') {
-          // 截取前 10000 个字符
-          this.output = outputResult.slice(0, 10000)
+          // 截取前 100000 个字符
+          this.output = outputResult.slice(0, 100000)
         }
       } catch (consoleError) {
         // 忽略获取输出时的错误
@@ -214,6 +213,7 @@ export class Game {
             `User ${player.id} invested ${investRecord.amount} and got profit ${investRecord.profit}`,
           )
           user.history.push(investRecord)
+          user.history = user.history.slice(-100)
           user.gold = player.gold
         }
         getUserSockets(user.id).forEach((socket) => {
@@ -237,7 +237,7 @@ export class Game {
           })
         })
       }
-      this.history = this.history.slice(-1000)
+      this.history = this.history.slice(-100)
       gameData.history = this.history
     } catch (error) {
       this.error = (error as Error).stack || (error as Error).message
@@ -271,13 +271,7 @@ export class Game {
     if (!user) {
       return
     }
-    const player = new Player(
-      playerId,
-      code,
-      user.gold,
-      user.history,
-      () => gameData.history,
-    )
+    const player = new Player(playerId, code, user.gold, () => gameData.history)
     this.addPlayer(player)
   }
 
@@ -297,12 +291,6 @@ export class Game {
 
 const users = Object.values(gameData.users)
 const players = users.map((user) => {
-  return new Player(
-    user.id,
-    user.code,
-    user.gold,
-    [...user.history],
-    () => gameData.history,
-  )
+  return new Player(user.id, user.code, user.gold, () => gameData.history)
 })
 export const game = new Game(gameData.tick, players, gameData.history)
