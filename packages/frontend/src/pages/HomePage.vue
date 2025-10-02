@@ -28,7 +28,9 @@
                       <span v-else class="rank-badge">{{ index + 1 }}</span>
                     </div>
                     <div class="leaderboard-username">{{ user.username }}</div>
-                    <div class="leaderboard-gold">{{ user.gold }}</div>
+                    <div class="leaderboard-gold">
+                      {{ formatNumber(user.gold) }}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -149,6 +151,7 @@ import type { Investment } from '../api/types'
 import { UserApi } from '../api/user'
 import Editor from '../components/editor/Editor.vue'
 import { userStore } from '../store'
+import { formatNumber } from '../utils'
 
 const editorRef = shallowRef<InstanceType<typeof Editor>>()
 const code = ref('')
