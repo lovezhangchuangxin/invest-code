@@ -145,13 +145,13 @@ export class Player {
   }
 
   /**
-   * 计算一个随机的收益率，范围 0 ~ 5，期望值约为 0.8
+   * 计算一个随机的收益率，范围 0 ~ 6，期望值约为 1.2
    */
   public static calculateReturnRate() {
-    // 使用正态分布近似，均值为0.8，标准差为0.7
-    // 这样可以确保大部分结果在0-5范围内，且期望值为0.8
-    const mean = 0.8
-    const stdDev = 0.7
+    // 使用正态分布近似，均值为1.2，标准差为0.8
+    // 这样可以确保大部分结果在0-6范围内，且期望值为1.2
+    const mean = 1.2
+    const stdDev = 0.8
 
     // Box-Muller变换生成正态分布随机数
     const u1 = Math.random()
@@ -162,8 +162,8 @@ export class Player {
     // 转换为指定均值和标准差的正态分布
     let result = mean + stdDev * randomNormal
 
-    // 确保结果在0-5范围内
-    result = Math.max(0, Math.min(5, result))
+    // 确保结果在0-6范围内
+    result = Math.max(0, Math.min(6, result))
 
     return result
   }
