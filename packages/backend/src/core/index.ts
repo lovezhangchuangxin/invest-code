@@ -67,8 +67,6 @@ export class Player {
       const rate = Player.calculateReturnRate()
       const profit = Math.floor(invest * rate)
       this.gold += profit
-      // 自然增长 10
-      this.gold += 10
       const investRecord: Investment = {
         id: Date.now(),
         userId: this.id,
@@ -132,6 +130,8 @@ export class Game {
           continue
         }
 
+        // 自然增长
+        player.gold += 10
         if (!player.code.trim()) {
           continue
         }

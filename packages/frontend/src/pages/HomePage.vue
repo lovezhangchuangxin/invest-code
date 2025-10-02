@@ -231,6 +231,30 @@ watchEffect(() => {
       messages.value = messages.value.slice(-100)
     },
   )
+
+  socket.value.on(
+    'output',
+    ({
+      tick,
+      output,
+      total,
+    }: {
+      tick: number
+      output: string[]
+      total: number
+    }) => {
+      if (total >= 10000) {
+        messages.value.push(
+          `[${tick} console]: 输出长度大于10000个字符，不显示，请减少输出`,
+        )
+        return
+      }
+
+      output.forEach((msg) => {
+        messages.value.push(`[${tick} console]: ${msg}`)
+      })
+    },
+  )
 })
 
 // 获取排行榜数据
