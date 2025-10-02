@@ -213,7 +213,6 @@ export class Game {
           console.log(
             `User ${player.id} invested ${investRecord.amount} and got profit ${investRecord.profit}`,
           )
-          player.myHistory.push(investRecord)
           user.history.push(investRecord)
           user.gold = player.gold
         }
