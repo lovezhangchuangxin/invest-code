@@ -30,4 +30,4 @@ declare function getMyHistory(): Array<Investment>
 /**
  * 获取全服投资记录
  */
-declare function getAllHistory(): Array<Investment>
+// declare function getAllHistory(): Array<Investment>

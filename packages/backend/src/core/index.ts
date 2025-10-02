@@ -61,7 +61,13 @@ export class Player {
       return user.history
     })
     // 设置获取全局历史记录的函数
-    jail.setSync('getAllHistory', this.getAllHistoryRef)
+    // jail.setSync('getAllHistory', this.getAllHistoryRef)
+    // 不提供获取全局历史记录的 api，getAllHistory = getMyHistory，为了兼容旧版代码
+    jail.setSync('getAllHistory', () => {
+      const user = gameData.users[this.id]
+      return user.history
+    })
+
     // 设置游戏函数
     jail.setSync('run', 'undefined')
 
