@@ -2,80 +2,87 @@
   <div>
     <Splitpanes class="default-theme" style="height: 100vh; width: 100vw">
       <Pane size="40">
-        <div class="leaderboard">
-          <div class="leaderboard-header" @click="toggleLeaderboard">
-            <h3>排行榜</h3>
-            <span class="toggle-btn">{{
-              leaderboardExpand ? '收起' : '展开'
-            }}</span>
-          </div>
-          <div class="leaderboard-content" v-show="leaderboardExpand">
-            <div class="leaderboard-list">
-              <div
-                class="leaderboard-item"
-                v-for="(user, index) in leaderboard"
-                :key="user.id"
-                :class="{ 'leaderboard-item-me': user.id === userStore.id }"
-              >
-                <div class="leaderboard-rank">
-                  <span v-if="index < 3" class="rank-badge rank-badge-top">{{
-                    index + 1
-                  }}</span>
-                  <span v-else class="rank-badge">{{ index + 1 }}</span>
-                </div>
-                <div class="leaderboard-username">{{ user.username }}</div>
-                <div class="leaderboard-gold">{{ user.gold }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="code-result">
-          <div class="code-result-item">
-            <div class="code-result-header" @click="toggleResult">
-              <div class="code-result-item-title">
-                <h3>运行结果</h3>
-              </div>
-              <div class="result-controls">
-                <button class="clear-log-btn" @click.stop="clearLog">
-                  清空日志
-                </button>
-                <button
-                  class="scroll-toggle-btn"
-                  @click.stop="toggleAutoScroll"
-                  :class="{ paused: !autoScroll }"
-                >
-                  {{ autoScroll ? '暂停滚动' : '启动滚动' }}
-                </button>
+        <Splitpanes horizontal>
+          <Pane size="60">
+            <div class="leaderboard">
+              <div class="leaderboard-header" @click="toggleLeaderboard">
+                <h3>排行榜</h3>
                 <span class="toggle-btn">{{
-                  resultExpand ? '收起' : '展开'
+                  leaderboardExpand ? '收起' : '展开'
                 }}</span>
               </div>
-            </div>
-            <div class="code-result-item-content" v-show="resultExpand">
-              <div class="code-result-item-content-item">
-                <div class="code-result-item-content-item-title">
-                  <h3>
-                    我的金币：<span style="color: red">{{
-                      userStore.gold
-                    }}</span>
-                  </h3>
-                </div>
-                <div
-                  ref="logContainerRef"
-                  class="code-result-item-content-item-content log-container"
-                >
+              <div class="leaderboard-content" v-show="leaderboardExpand">
+                <div class="leaderboard-list">
                   <div
-                    v-for="(msg, index) in messages"
-                    :key="index"
-                    class="log-message"
-                    v-html="formatMessage(msg)"
-                  ></div>
+                    class="leaderboard-item"
+                    v-for="(user, index) in leaderboard"
+                    :key="user.id"
+                    :class="{ 'leaderboard-item-me': user.id === userStore.id }"
+                  >
+                    <div class="leaderboard-rank">
+                      <span
+                        v-if="index < 3"
+                        class="rank-badge rank-badge-top"
+                        >{{ index + 1 }}</span
+                      >
+                      <span v-else class="rank-badge">{{ index + 1 }}</span>
+                    </div>
+                    <div class="leaderboard-username">{{ user.username }}</div>
+                    <div class="leaderboard-gold">{{ user.gold }}</div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </Pane>
+          <Pane size="40">
+            <div class="code-result">
+              <div class="code-result-item">
+                <div class="code-result-header" @click="toggleResult">
+                  <div class="code-result-item-title">
+                    <h3>运行结果</h3>
+                  </div>
+                  <div class="result-controls">
+                    <button class="clear-log-btn" @click.stop="clearLog">
+                      清空日志
+                    </button>
+                    <button
+                      class="scroll-toggle-btn"
+                      @click.stop="toggleAutoScroll"
+                      :class="{ paused: !autoScroll }"
+                    >
+                      {{ autoScroll ? '暂停滚动' : '启动滚动' }}
+                    </button>
+                    <span class="toggle-btn">{{
+                      resultExpand ? '收起' : '展开'
+                    }}</span>
+                  </div>
+                </div>
+                <div class="code-result-item-content" v-show="resultExpand">
+                  <div class="code-result-item-content-item">
+                    <div class="code-result-item-content-item-title">
+                      <h3>
+                        我的金币：<span style="color: red">{{
+                          userStore.gold
+                        }}</span>
+                      </h3>
+                    </div>
+                    <div
+                      ref="logContainerRef"
+                      class="code-result-item-content-item-content log-container"
+                    >
+                      <div
+                        v-for="(msg, index) in messages"
+                        :key="index"
+                        class="log-message"
+                        v-html="formatMessage(msg)"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Pane>
+        </Splitpanes>
       </Pane>
       <Pane size="60">
         <div class="tip">
@@ -352,6 +359,7 @@ const saveCode = async () => {
 
 .code-result {
   margin: 20px 10px;
+  height: calc(100% - 40px);
   border: 1px solid #ddd;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -359,6 +367,7 @@ const saveCode = async () => {
 
 .code-result-item {
   margin-bottom: 20px;
+  height: calc(100% - 20px);
 }
 
 .code-result-item-title {
@@ -376,7 +385,12 @@ const saveCode = async () => {
 }
 
 .code-result-item-content {
+  height: 100%;
   padding: 16px;
+}
+
+.code-result-item-content-item {
+  height: 100%;
 }
 
 .code-result-item-content-item-title h3 {
@@ -391,7 +405,7 @@ const saveCode = async () => {
   border: 1px solid #e9ecef;
   border-radius: 4px;
   padding: 12px;
-  max-height: 200px;
+  max-height: calc(100% - 130px);
   overflow-y: auto;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 14px;
@@ -486,6 +500,7 @@ const saveCode = async () => {
 .leaderboard {
   margin: 20px 10px 10px;
   border: 1px solid #ddd;
+  height: calc(100% - 40px);
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -511,10 +526,11 @@ const saveCode = async () => {
 
 .leaderboard-content {
   padding: 16px;
+  height: calc(100% - 72px);
 }
 
 .leaderboard-list {
-  max-height: 200px;
+  height: 100%;
   overflow-y: auto;
 }
 
