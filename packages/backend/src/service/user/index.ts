@@ -51,7 +51,11 @@ export default class UserService {
       email,
       gold: 100, // 初始金币
       history: [],
-      code: '', // 用户脚本
+      code: `
+function run() {
+    return 0
+}
+      `, // 用户脚本
     } satisfies User
 
     gameData.users[userInfo.id] = userInfo
