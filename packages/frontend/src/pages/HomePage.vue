@@ -331,7 +331,7 @@ const saveCode = async () => {
 }
 
 .code-editor {
-  margin-left: -20px;
+  margin-left: -10px;
 }
 
 .code-result {
