@@ -153,60 +153,50 @@ export class Player {
   }
 
   /**
-   * 计算一个随机的收益率（乘数），引入“市场情景”混合分布：
-   * - 熊市（约30%）：回报偏向亏损，波动相对较小
-   * - 常态（约50%）：回报围绕1倍附近小幅波动
-   * - 牛市（约20%）：回报偏向盈利，尾部受控
+   * 计算一个随机的收益率（乘数），使用加权随机实现
+   * 收益率范围：0-10倍
+   * 期望收益：1.02
    *
-   * 使用截断对数正态分布来保证非负且控制长尾；最终裁剪到合理区间 [0.4, 3.0]
-   * 期望值约略在 1.05~1.15 之间（随采样随机浮动），更贴近投资常识。
+   * 区间和权重配置
+   * - 0.0-0.5倍，权重33
+   * - 0.5-1.0倍，权重 28
+   * - 1.0-1.5倍，权重 22
+   * - 1.5-2.5倍，权重 11
+   * - 2.5-5.0倍，权重 5
+   * - 5.0-7.5倍，权重 0
+   * - 7.5-10.0倍，权重 0
    */
   public static calculateReturnRate() {
-    // 情景权重（可调整）
-    const pBear = 0.3
-    const pNormal = 0.5
-    const pBull = 0.2
+    // 定义收益区间和权重
+    const ranges: [number, number, number][] = [
+      [0.0, 0.5, 34], // 0.0-0.5倍，权重34
+      [0.5, 1.0, 28], // 0.5-1.0倍，权重28
+      [1.0, 1.5, 21], // 1.0-1.5倍，权重21
+      [1.5, 2.5, 11], // 1.5-2.5倍，权重11
+      [2.5, 5.0, 5], // 2.5-5.0倍，权重5
+      [5.0, 7.5, 1], // 5.0-7.5倍，权重1
+      [7.5, 10.0, 0], // 7.5-10.0倍，权重0（保留区间但不分配权重）
+    ]
 
-    // 截断区间，避免极端值
-    const minRate = 0.4
-    const maxRate = 3.0
+    // 计算总权重
+    const totalWeight = ranges.reduce((sum, [, , weight]) => sum + weight, 0)
 
-    // 采样情景
-    const r = Math.random()
-    let mu: number
-    let sigma: number
-    if (r < pBear) {
-      // 熊市：中位数约 0.85，波动较小
-      mu = Math.log(0.85)
-      sigma = 0.18
-    } else if (r < pBear + pNormal) {
-      // 常态：中位数约 1.02，轻微波动
-      mu = Math.log(1.01)
-      sigma = 0.12
-    } else {
-      // 牛市：中位数约 1.20，波动略大但受控
-      mu = Math.log(1.2)
-      sigma = 0.22
+    // 生成随机值
+    const randVal = Math.random() * totalWeight
+
+    // 根据权重选择区间并生成具体数值
+    let currentWeight = 0
+    for (const [rMin, rMax, weight] of ranges) {
+      currentWeight += weight
+      if (randVal <= currentWeight) {
+        // 在选定区间内生成随机数
+        const rewardMultiplier = Math.random() * (rMax - rMin) + rMin
+        return parseFloat(rewardMultiplier.toFixed(1))
+      }
     }
 
-    // 采样截断对数正态
-    const sampleTruncatedLogNormal = (
-      muVal: number,
-      sigmaVal: number,
-      minVal: number,
-      maxVal: number,
-    ) => {
-      // Box-Muller 生成标准正态
-      const u1 = Math.random() || Number.MIN_VALUE
-      const u2 = Math.random()
-      const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
-      const logNorm = Math.exp(muVal + sigmaVal * z)
-      // 裁剪以控制尾部
-      return Math.min(maxVal, Math.max(minVal, logNorm))
-    }
-
-    const rate = sampleTruncatedLogNormal(mu, sigma, minRate, maxRate)
-    return rate
+    // 理论上不会执行到这里，但为了防止意外，返回默认值
+    return 1.0
   }
 }
 
