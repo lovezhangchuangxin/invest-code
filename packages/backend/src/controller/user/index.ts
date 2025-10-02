@@ -101,7 +101,7 @@ export default class UserController {
       throw new GameError(ErrorCode.PARAM_ERROR)
     }
 
-    if (script.length > 10000) {
+    if (script.length > 100000) {
       throw new GameError(ErrorCode.SCRIPT_TOO_LONG)
     }
 
