@@ -179,11 +179,11 @@ export class Player {
       sigma = 0.18
     } else if (r < pBear + pNormal) {
       // 常态：中位数约 1.02，轻微波动
-      mu = Math.log(1.02)
+      mu = Math.log(1.01)
       sigma = 0.12
     } else {
-      // 牛市：中位数约 1.30，波动略大但受控
-      mu = Math.log(1.3)
+      // 牛市：中位数约 1.20，波动略大但受控
+      mu = Math.log(1.2)
       sigma = 0.22
     }
 
