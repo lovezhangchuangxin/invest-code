@@ -96,7 +96,7 @@
             <p>
               你需要定义一个 run 函数，无需 export 导出。run
               方法需要返回一个数字，表示当前 tick
-              你投资的金额（一次最多投资1e9，超出该值会自动设置为1e9）
+              你投资的金额（一次最多投资1e8，超出该值会自动设置为1e8）
             </p>
             <p>下面是本游戏提供的一些 api 方法：</p>
             <p>
@@ -138,15 +138,7 @@ import { ElMessage } from 'element-plus'
 import type { Socket } from 'socket.io-client'
 import { Pane, Splitpanes } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
-import {
-  inject,
-  nextTick,
-  onBeforeUnmount,
-  ref,
-  shallowRef,
-  watchEffect,
-  type Ref,
-} from 'vue'
+import { inject, nextTick, ref, shallowRef, watchEffect, type Ref } from 'vue'
 import type { Investment } from '../api/types'
 import { UserApi } from '../api/user'
 import Editor from '../components/editor/Editor.vue'
@@ -259,29 +251,10 @@ watchEffect(() => {
       )
     },
   )
-})
 
-// 获取排行榜数据
-const fetchLeaderboard = async () => {
-  try {
-    const response = await UserApi.getAllUsers()
-    leaderboard.value = response.data
-      .sort((a, b) => b.gold - a.gold)
-      .slice(0, 20) // 只显示前20名
-  } catch (error) {
-    console.error('获取排行榜失败:', error)
-  }
-}
-
-// 初始化时获取排行榜
-fetchLeaderboard()
-
-// 每10秒更新一次排行榜
-const leaderboardInterval = setInterval(fetchLeaderboard, 2000)
-
-// 组件销毁时清除定时器
-onBeforeUnmount(() => {
-  clearInterval(leaderboardInterval)
+  socket.value.on('allUsers', (users) => {
+    leaderboard.value = users
+  })
 })
 
 const saveCode = async () => {

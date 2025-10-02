@@ -1,4 +1,4 @@
-import { getUserSockets } from '@/app/server'
+import { getUserSockets, io } from '@/app/server'
 import { gameData, Investment, saveGameData } from '@/db'
 import { Context, Isolate } from 'isolated-vm'
 
@@ -6,7 +6,7 @@ const PLAYER_HISTORY_SIZE = parseInt(process.env.PLAYER_HISTORY_SIZE || '100')
 const GAME_GLOBAL_HISTORY_SIZE = parseInt(
   process.env.GAME_GLOBAL_HISTORY_SIZE || '1000',
 )
-const GAME_MAX_INVEST = Number(process.env.GAME_MAX_INVEST || '1e9')
+const GAME_MAX_INVEST = Number(process.env.GAME_MAX_INVEST || '1e8')
 const GAME_TICK = parseInt(process.env.GAME_TICK || '1000')
 
 export class Player {
@@ -22,6 +22,8 @@ export class Player {
   public runError: string | null = null
   // 用户输出
   public output: string = ''
+  // 当前 tick 的全局 rate
+  public static rate: number = 1
 
   constructor(
     id: number,
@@ -110,7 +112,7 @@ export class Player {
       if (isNaN(invest) || invest < 0) invest = 0
       invest = Math.min(invest, this.gold, GAME_MAX_INVEST)
       this.gold -= invest
-      const rate = Player.calculateReturnRate()
+      const rate = Player.rate
       const profit = Math.floor(invest * rate)
       this.gold += profit
       const investRecord: Investment = {
@@ -223,6 +225,7 @@ export class Game {
 
   public async runTick() {
     console.log(`Tick ${this.tick} start`)
+    Player.rate = Player.calculateReturnRate()
     try {
       for (const player of this.players) {
         const user = gameData.users[player.id]
@@ -284,6 +287,16 @@ export class Game {
     }
     this.tick++
     gameData.tick = this.tick
+    const allUsers = Object.values(gameData.users)
+      .map((user) => {
+        return {
+          id: user.id,
+          username: user.username,
+          gold: user.gold,
+        }
+      })
+      .sort((a, b) => b.gold - a.gold)
+    io.sockets.emit('allUsers', allUsers)
   }
 
   /**
