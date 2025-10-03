@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsnd --transpile-only --require tsconfig-paths/register -- src/index.ts",
     "dev:debug": "tsnd --respawn --transpile-only --inspect -- src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "reset": "node ./scripts/resetData.js"
   },
   "keywords": [],
   "author": "",
