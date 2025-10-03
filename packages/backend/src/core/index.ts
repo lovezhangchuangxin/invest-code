@@ -1,6 +1,10 @@
 import { getUserSockets, io } from '@/app/server'
 import { gameData, Investment, saveGameData } from '@/db'
+import dotenv from 'dotenv'
 import { Context, Isolate } from 'isolated-vm'
+import path from 'path'
+
+dotenv.config({ path: path.resolve(__dirname, '../../../../config/env/.env') })
 
 const PLAYER_HISTORY_SIZE = parseInt(process.env.PLAYER_HISTORY_SIZE || '100')
 const CODE_TIME_LIMIT = parseInt(process.env.CODE_TIME_LIMIT || '20')
