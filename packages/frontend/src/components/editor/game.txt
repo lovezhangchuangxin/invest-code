@@ -28,6 +28,11 @@ interface Investment {
 declare function getMyHistory(): Array<Investment>
 
 /**
+ * 获取当前概率配置
+ */
+declare function getConfig(): [number, number, number][]
+
+/**
  * 获取全服投资记录
  */
 // declare function getAllHistory(): Array<Investment>

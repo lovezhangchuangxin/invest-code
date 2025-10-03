@@ -32,6 +32,16 @@ export class Player {
   public output: string = ''
   // 当前 tick 的全局 rate
   public static rate: number = 1
+  // 概率区间配置
+  public static ranges: [number, number, number][] = [
+    [0.0, 0.5, 39], // 0.0-0.5倍，权重34
+    [0.5, 1.0, 29], // 0.5-1.0倍，权重28
+    [1.0, 1.5, 28], // 1.0-1.5倍，权重21
+    [1.5, 2.5, 11], // 1.5-2.5倍，权重11
+    [2.5, 5.0, 5], // 2.5-5.0倍，权重5
+    [5.0, 7.5, 1], // 5.0-7.5倍，权重1
+    [7.5, 10.0, 0], // 7.5-10.0倍，权重0（保留区间但不分配权重）
+  ]
 
   constructor(
     id: number,
@@ -59,6 +69,10 @@ export class Player {
     jail.setSync('getMyHistory', () => {
       const user = gameData.users[this.id]
       return user.history
+    })
+    // 设置获取当前概率配置的函数
+    jail.setSync('getConfig', () => {
+      return Player.ranges
     })
     // 设置获取全局历史记录的函数
     // jail.setSync('getAllHistory', this.getAllHistoryRef)
@@ -173,15 +187,7 @@ export class Player {
    */
   public static calculateReturnRate() {
     // 定义收益区间和权重
-    const ranges: [number, number, number][] = [
-      [0.0, 0.5, 39], // 0.0-0.5倍，权重34
-      [0.5, 1.0, 29], // 0.5-1.0倍，权重28
-      [1.0, 1.5, 28], // 1.0-1.5倍，权重21
-      [1.5, 2.5, 11], // 1.5-2.5倍，权重11
-      [2.5, 5.0, 5], // 2.5-5.0倍，权重5
-      [5.0, 7.5, 1], // 5.0-7.5倍，权重1
-      [7.5, 10.0, 0], // 7.5-10.0倍，权重0（保留区间但不分配权重）
-    ]
+    const ranges = Player.ranges
 
     // 计算总权重
     const totalWeight = ranges.reduce((sum, [, , weight]) => sum + weight, 0)
