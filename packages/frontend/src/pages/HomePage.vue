@@ -87,47 +87,53 @@
         </Splitpanes>
       </Pane>
       <Pane size="60">
-        <div class="tip">
-          <div class="tip-header" @click="toggleTip">
-            <h3>使用说明</h3>
-            <span class="toggle-btn">{{ tipExpand ? '收起' : '展开' }}</span>
-          </div>
-          <div class="tip-content" v-show="tipExpand">
-            <p>
-              你需要定义一个 run 函数，无需 export 导出。run
-              方法需要返回一个数字，表示当前 tick
-              你投资的金额（一次最多投资1e8，超出该值会自动设置为1e8）
-            </p>
-            <p>下面是本游戏提供的一些 api 方法：</p>
-            <p>
-              <code>getTick()</code>
-              获取当前 tick
-            </p>
-            <p>
-              <code>getGold()</code>
-              获取你拥有的金币数量
-            </p>
-            <p>
-              <code>getConfig()</code>
-              获取当前加权随机概率配置表
-            </p>
-            <p>
-              <code>getMyHistory()</code>
-              获取你的历史投资记录数组，包含
-              <code>{amount, profit}</code>字段，amount 表示你投入的金额，profit
-              表示你的利润
-            </p>
-          </div>
-        </div>
-        <div class="editor-container">
-          <Editor
-            ref="editorRef"
-            v-model="code"
-            lang="javascript"
-            class="code-editor"
-            @save="saveCode"
-          />
-        </div>
+        <Splitpanes horizontal>
+          <Pane :size="tipSize" min-size="7" :style="{ 'overflow-y': 'auto' }">
+            <div class="tip">
+              <div class="tip-header" @click="toggleTip">
+                <h3>使用说明</h3>
+                <span class="toggle-btn">{{ tipExpand ? '收起' : '展开' }}</span>
+              </div>
+              <div class="tip-content" v-show="tipExpand">
+                <p>
+                  你需要定义一个 run 函数，无需 export 导出。run
+                  方法需要返回一个数字，表示当前 tick
+                  你投资的金额（一次最多投资1e8，超出该值会自动设置为1e8）
+                </p>
+                <p>下面是本游戏提供的一些 api 方法：</p>
+                <p>
+                  <code>getTick()</code>
+                  获取当前 tick
+                </p>
+                <p>
+                  <code>getGold()</code>
+                  获取你拥有的金币数量
+                </p>
+                <p>
+                  <code>getConfig()</code>
+                  获取当前加权随机概率配置表
+                </p>
+                <p>
+                  <code>getMyHistory()</code>
+                  获取你的历史投资记录数组，包含
+                  <code>{amount, profit}</code>字段，amount 表示你投入的金额，profit
+                  表示你的利润
+                </p>
+              </div>
+            </div>
+          </Pane>
+          <Pane ref="editorPaneRef">
+            <div class="editor-container">
+              <Editor
+                ref="editorRef"
+                v-model="code"
+                lang="javascript"
+                class="code-editor"
+                @save="saveCode"
+              />
+            </div>
+          </Pane>
+        </Splitpanes>
       </Pane>
     </Splitpanes>
   </div>
@@ -159,9 +165,23 @@ const logContainerRef = ref<HTMLDivElement | null>(null)
 const leaderboard = ref<Array<{ id: number; username: string; gold: number }>>(
   [],
 )
+const tipSize = ref(31)
+const editorPaneRef = ref<InstanceType<typeof Pane> | null>(null)
 
 const toggleTip = () => {
   tipExpand.value = !tipExpand.value
+  // Update the tip pane size based on expanded state
+  if (tipExpand.value) {
+    tipSize.value = 31
+  } else {
+    tipSize.value = 7
+  }
+  
+  // 通过css重新设置codeeditor的高度为100%
+  nextTick(() => {
+    editorRef.value?.resize()
+    editorPaneRef.value?.emit('resize')
+  })
 }
 
 const toggleResult = () => {
@@ -183,8 +203,10 @@ const toggleAutoScroll = () => {
 const pushMessage = (msg: string) => {
   if (autoScroll.value) {
     messages.value.push(msg)
+  } else {
+    // 当暂停滚动时，将消息放入缓存
+    messageCache.value.push(msg)
   }
-  // 当暂停滚动时，不再缓存消息，直接丢弃
 }
 
 // 格式化消息，处理换行符和收益率颜色
@@ -357,11 +379,21 @@ const saveCode = async () => {
 
 .editor-container {
   width: 100%;
-  height: calc(100vh - 400px);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  margin: 10px;
+  margin-top: 0;
 }
 
 .code-editor {
-  margin-left: -10px;
+  flex: 1;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .code-result {
@@ -593,6 +625,7 @@ const saveCode = async () => {
 .splitpanes__pane {
   font-family: Helvetica, Arial, sans-serif;
   background-color: #fff !important;
+  height: 100%;
 }
 
 .splitpanes__splitter {
