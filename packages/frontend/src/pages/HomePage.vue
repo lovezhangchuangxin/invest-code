@@ -191,19 +191,19 @@ const pushMessage = (msg: string) => {
 const formatMessage = (msg: string) => {
   // 将换行符转换为HTML的<br>标签
   let formattedMsg = msg.replace(/\n/g, '<br>')
-  
+
   // 匹配投资/收益信息并添加颜色到整行
   // 格式: [tick]: 投资X，收益Y，收益率Z%
   const investmentRegex = /^\[(\d+)\]: 投资\d+，收益\d+，收益率(-?\d+\.\d+)%$/
   const match = msg.match(investmentRegex)
-  
+
   if (match) {
-    const rate = parseFloat(match[2])
+    const rate = parseFloat(match[2]!)
     const color = rate >= 0 ? 'green' : 'red'
     // 给整行添加颜色和加粗样式
     formattedMsg = `<span style="color: ${color}; font-weight: bold;">${formattedMsg}</span>`
   }
-  
+
   return formattedMsg
 }
 
