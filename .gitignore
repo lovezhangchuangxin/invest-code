@@ -18,3 +18,4 @@ coverage
 tmp
 docs/**/cache
 .env
+package-lock.json
