@@ -149,6 +149,8 @@ const leaderboardExpand = ref(true)
 const autoScroll = ref(true)
 const socket = inject<Ref<Socket>>('socket')
 const messages = ref<string[]>([])
+// 暂停滚动后消息先缓存在这里，启动滚动后再加入消息队列中
+const messageCache = ref<string[]>([])
 const logContainerRef = ref<HTMLDivElement | null>(null)
 const leaderboard = ref<Array<{ id: number; username: string; gold: number }>>(
   [],
@@ -168,6 +170,18 @@ const toggleLeaderboard = () => {
 
 const toggleAutoScroll = () => {
   autoScroll.value = !autoScroll.value
+  if (autoScroll.value) {
+    messages.value.push(...messageCache.value)
+    messageCache.value = []
+  }
+}
+
+const pushMessage = (msg: string) => {
+  if (autoScroll.value) {
+    messages.value.push(msg)
+  } else {
+    messageCache.value.push(msg)
+  }
 }
 
 // 格式化消息，处理换行符
@@ -210,7 +224,7 @@ watchEffect(() => {
       investment: Investment
       gold: number
     }) => {
-      messages.value.push(
+      pushMessage(
         `[${tick}]: 投资${investment.amount}，收益${
           investment.profit
         }，收益率${(
@@ -226,7 +240,7 @@ watchEffect(() => {
   socket.value.on(
     'codeError',
     ({ tick, error }: { tick: number; error: string }) => {
-      messages.value.push(`[tick: ${tick}]: ${error}`)
+      pushMessage(`[tick: ${tick}]: ${error}`)
       messages.value = messages.value.slice(-100)
     },
   )
@@ -234,7 +248,7 @@ watchEffect(() => {
   socket.value.on(
     'runError',
     ({ tick, error }: { tick: number; error: string }) => {
-      messages.value.push(`[tick: ${tick}]: ${error}`)
+      pushMessage(`[tick: ${tick}]: ${error}`)
       messages.value = messages.value.slice(-100)
     },
   )
@@ -242,9 +256,7 @@ watchEffect(() => {
   socket.value.on(
     'output',
     ({ tick, output }: { tick: number; output: string }) => {
-      messages.value.push(
-        `[tick: ${tick} console start]:\n${output}\n[console end]`,
-      )
+      pushMessage(`[tick: ${tick} console start]:\n${output}\n[console end]`)
     },
   )
 
