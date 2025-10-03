@@ -183,9 +183,8 @@ const toggleAutoScroll = () => {
 const pushMessage = (msg: string) => {
   if (autoScroll.value) {
     messages.value.push(msg)
-  } else {
-    messageCache.value.push(msg)
   }
+  // 当暂停滚动时，不再缓存消息，直接丢弃
 }
 
 // 格式化消息，处理换行符和收益率颜色
