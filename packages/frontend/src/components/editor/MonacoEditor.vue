@@ -47,6 +47,17 @@ onMounted(() => {
     scrollbar: {
       verticalScrollbarSize: 10,
     },
+    // Disable accessibility help and other widgets that might show icons
+    accessibilitySupport: 'off',
+    ariaLabel: '',
+    // Hide the minimap and other UI elements that might contain icons
+    minimap: {
+      enabled: false
+    },
+    // Hide glyph margin which might contain icons
+    glyphMargin: false,
+    // Hide line numbers if they have icons
+    lineNumbers: 'on',
   })
   codeEditorRef.value = codeEditor
 
@@ -72,6 +83,11 @@ onMounted(() => {
       automaticLayout: true,
       tabCompletion: 'on',
       tabSize: 4,
+      accessibilitySupport: 'off',
+      minimap: {
+        enabled: false
+      },
+      glyphMargin: false,
     })
   })
 })
