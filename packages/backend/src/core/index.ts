@@ -221,6 +221,7 @@ export class Game {
   public history: Investment[] = []
   public error: string | null = null
   public timer: NodeJS.Timeout | null = null
+  private lastSaveTime: number = Date.now()
 
   constructor(tick: number, players: Player[], history: Investment[]) {
     this.tick = tick
@@ -289,6 +290,14 @@ export class Game {
       }
       this.history = this.history.slice(-GAME_GLOBAL_HISTORY_SIZE)
       gameData.history = this.history
+      
+      // 每5分钟保存一次数据 (5分钟 = 300000毫秒)
+      const now = Date.now();
+      if (now - this.lastSaveTime >= 300000) {
+        saveGameData();
+        this.lastSaveTime = now;
+        console.log('Game data saved automatically at', new Date().toISOString());
+      }
     } catch (error) {
       this.error = (error as Error).stack || (error as Error).message
     }
