@@ -1,6 +1,6 @@
+import { createConnection, userSocketIds } from '@/socket/connection'
 import http from 'http'
 import { Server, Socket } from 'socket.io'
-import { createConnection, userSocketIds } from '../socket/connection'
 import app from './app'
 
 const server = http.createServer(app.callback())

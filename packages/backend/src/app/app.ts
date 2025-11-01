@@ -1,3 +1,5 @@
+import { globalErrorHandler } from '@/error/globalErrorHandler'
+import router from '@/router'
 import cors from '@koa/cors'
 import dotenv from 'dotenv'
 import Koa from 'koa'
@@ -5,8 +7,6 @@ import bodyParser from 'koa-bodyparser'
 import jwt from 'koa-jwt'
 import KoaStatic from 'koa-static'
 import path from 'path'
-import { globalErrorHandler } from '../error/globalErrorHandler'
-import router from '../router'
 
 dotenv.config({ path: path.resolve(__dirname, '../../../../config/env/.env') })
 
